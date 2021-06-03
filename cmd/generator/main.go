@@ -50,8 +50,7 @@ func main() {
 
 	f, err := os.Create(fPath)
 	if err != nil {
-		fmt.Printf("error while creating file: %v\n", err)
-		os.Exit(1)
+		log.Printf("error while creating file: %v\n", err)
 	}
 	defer f.Close()
 

@@ -180,6 +180,5 @@ func getLength(fd structField) (string, error) {
 			}
 		}
 	}
-	fmt.Printf("Tag: %s\n", fd.Tag)
 	return "", fmt.Errorf("error while finding length attribute for field %s", fd.Name)
 }
