@@ -1,6 +1,6 @@
 PHONY : build run fresh test clean pack-releases
 
-BIN := binhandle.bin
+BIN := binserde.bin
 
 HASH := $(shell git rev-parse --short HEAD)
 COMMIT_DATE := $(shell git show -s --format=%ci ${HASH})
@@ -19,8 +19,8 @@ run:
 fresh: clean build
 
 test: build
-	rm -rf ./test/binhandle_gen.go
-	./binhandle.bin -dir test -file test/binhandle_gen.go
+	rm -rf ./test/binserde_gen.go
+	./binserde.bin -dir test -file test/binserde_gen.go
 	go test -v ./test
 
 clean:

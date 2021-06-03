@@ -45,7 +45,7 @@ func main() {
 
 	fPath := *dest
 	if fPath == "" {
-		fPath = fmt.Sprintf("%s_binhandle_gen.go", *pkg)
+		fPath = fmt.Sprintf("%s_binserde_gen.go", *pkg)
 	}
 
 	f, err := os.Create(fPath)

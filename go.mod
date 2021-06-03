@@ -1,4 +1,4 @@
-module github.com/iamd3vil/binhandle
+module github.com/iamd3vil/binserde
 
 go 1.16
 
