@@ -44,12 +44,27 @@ func parseNode(node ast.Node) (map[string][]structField, error) {
 func parseStructSpec(structName string, s *ast.StructType) ([]structField, error) {
 	stFields := []structField{}
 	for _, f := range s.Fields.List {
-		// Get `validate` tag. If it doesn't have that fields, ignore that field
-		tag := reflect.StructTag(strings.Replace(f.Tag.Value, "`", "", -1)).Get("bin")
+		// Get `bin` tag. If it doesn't have that fields, ignore that field
+		var (
+			tag string
+			ok  bool
+		)
+		if f.Tag != nil {
+			tag, ok = reflect.StructTag(strings.Replace(f.Tag.Value, "`", "", -1)).Lookup("bin")
+			if !ok {
+				tag = ""
+			}
+		}
 		var fieldType string
 		switch f.Type.(type) {
 		case *ast.Ident:
 			fieldType = f.Type.(*ast.Ident).Name
+		case *ast.ArrayType:
+			arrayType := f.Type.(*ast.ArrayType)
+			if arrayType.Elt.(*ast.Ident).String() != "byte" {
+				return nil, fmt.Errorf("invalid type in struct %s: []%s", structName, f.Type)
+			}
+			fieldType = fmt.Sprintf("[]%s", arrayType.Elt.(*ast.Ident).String())
 		default:
 			return nil, fmt.Errorf("invalid type in struct %s: %v", structName, f.Type)
 		}

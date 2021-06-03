@@ -19,8 +19,8 @@ run:
 fresh: clean build
 
 test: build
-	rm -rf ./test/validations_gen.go
-	./binhandle.bin -dir test -file test/validations_gen.go
+	rm -rf ./test/binhandle_gen.go
+	./binhandle.bin -dir test -file test/binhandle_gen.go
 	go test -v ./test
 
 clean:

@@ -20,6 +20,7 @@ func main() {
 	pkg := flag.String("pkg", "main", "Package to be given for the generated code")
 	dir := flag.String("dir", ".", `Path of the directory for finding source files with structs.`)
 	dest := flag.String("file", "", "Destination File")
+	endianess := flag.String("endianess", "big", "Endianess")
 	flag.Parse()
 
 	fs, err := initFileSystem()
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	code := bytes.NewBuffer([]byte{})
-	if err := generateCode(code, fs, sts); err != nil {
+	if err := generateCode(code, fs, *pkg, sts, *endianess); err != nil {
 		log.Fatalf("error while generating code: %v", err)
 	}
 

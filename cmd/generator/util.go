@@ -11,7 +11,7 @@ import (
 )
 
 // initFileSystem initializes the stuffbin FileSystem to provide
-// access to bunded static assets to the app.
+// access to bundled static assets to the app.
 func initFileSystem() (stuffbin.FileSystem, error) {
 	ex, err := os.Executable()
 	if err != nil {

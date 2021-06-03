@@ -2,26 +2,25 @@
 package {{.Pkg}}
 
 import (
-    "errors"
-    "regexp"
+    "encoding/binary"
 )
-
-{{if .Regexes}}
-var (
-    {{- range .Regexes}}
-    {{.StructName}}{{.FieldName}}Regex = regexp.MustCompile("{{.Regex}}")
-    {{- end}}
-)
-{{end}}
 
 {{- range .Structs}}
-
-func (s *{{.StructName}}) Validate() error {
-    {{- range .Constraints}}
-        if {{.FieldName}} {{.Op}} {{.Value}} {
-            return errors.New("{{.Error}}")
-        }
+func (s *{{.StructName}}) Marshal() []byte {
+    ln := 0
+    {{- range .Fields}}
+        ln += {{.Offset}}
     {{- end}}
-    return nil
+    dest := make([]byte, ln)
+    offset := 0
+    {{- range .Fields}}
+        {{- if not .Append}}
+            binary.{{$.Endian}}.{{.Func}}(dest[offset:offset+{{.Offset}}], {{.FieldName}})
+        {{- else}}
+            copy(dest[offset:offset+{{.Offset}}], []byte(s.{{.FieldName}}))
+        {{- end}}
+        offset += {{.Offset}}
+    {{- end}}
+    return dest
 }
 {{- end}}
