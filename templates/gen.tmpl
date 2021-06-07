@@ -14,7 +14,7 @@ func (s *{{.StructName}}) Marshal() []byte {
         {{- if not .Append}}
             binary.{{$.Endian}}.{{.Func}}(dest[offset:offset+{{.Offset}}], {{.FieldName}})
         {{- else}}
-            copy(dest[offset:offset+{{.Offset}}], []byte(s.{{.FieldName}}))
+            copy(dest[offset:offset+{{.Offset}}], {{.FieldName}})
         {{- end}}
         offset += {{.Offset}}
     {{- end}}
@@ -43,6 +43,10 @@ func (s *{{.StructName}}) Unmarshal(data []byte) error {
             s.{{.FieldName}} = data[offset:offset+{{.Offset}}]
         {{- else if .String}}
             s.{{.FieldName}} = string(data[offset:offset+{{.Offset}}])
+        {{- else if .Struct}}
+            if err := s.{{.FieldName}}.Unmarshal(data[offset:offset+{{.Offset}}]); err != nil {
+                return err
+            }
         {{- else}}
             s.{{.FieldName}} = {{.Type}}(binary.{{$.Endian}}.{{.Func}}(data[offset:offset+{{.Offset}}]))
         {{- end}}

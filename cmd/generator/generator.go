@@ -27,6 +27,7 @@ type genMarshalStruct struct {
 type genUnmarshalField struct {
 	Append    bool
 	String    bool
+	Struct    bool
 	Func      string
 	Offset    string
 	Length    int64
@@ -70,9 +71,7 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 
 		fds := make([]genMarshalField, 0, len(fields))
 		for _, f := range fields {
-			fd := genMarshalField{
-				FieldName: f.Name,
-			}
+			fd := genMarshalField{}
 
 			switch f.Type {
 			case "[]byte", "string":
@@ -82,6 +81,7 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 					return nil, err
 				}
 				fd.Offset = len
+				fd.FieldName = fmt.Sprintf("s.%s", f.Name)
 			case "int32", "uint32":
 				fd.Func = "PutUint32"
 				fd.Offset = "4"
@@ -94,6 +94,15 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 				fd.Func = "PutUint16"
 				fd.Offset = "2"
 				fd.FieldName = fmt.Sprintf("uint16(s.%s)", f.Name)
+			default:
+				// Check if the type is a struct in the package.
+				_, ok := sts[f.Type]
+				if !ok {
+					return nil, fmt.Errorf("error while generating marshalling code: %s", f.Type)
+				}
+				fd.Append = true
+				fd.Offset = fmt.Sprintf("s.%s.Size()", f.Name)
+				fd.FieldName = fmt.Sprintf("s.%s.Marshal()", f.Name)
 			}
 
 			fds = append(fds, fd)
@@ -143,6 +152,19 @@ func makeUnmarshallingStructs(sts map[string][]structField) ([]genUnmarshalStruc
 			case "int16", "uint16":
 				fd.Func = "Uint16"
 				fd.Offset = "2"
+			default:
+				// Check if the type is a struct in the package.
+				_, ok := sts[f.Type]
+				if !ok {
+					return nil, fmt.Errorf("error while generating marshalling code: %s", f.Type)
+				}
+
+				fd.Struct = true
+				len, err := getLength(f)
+				if err != nil {
+					return nil, err
+				}
+				fd.Offset = len
 			}
 
 			fds = append(fds, fd)
@@ -167,17 +189,15 @@ func addInitialContext(tmplContext map[string]interface{}, pkg, endianess string
 }
 
 func getLength(fd structField) (string, error) {
-	if fd.Type == "string" || fd.Type == "[]byte" {
-		attrs := strings.Split(fd.Tag, " ")
-		// Find length in attrs
-		for _, attr := range attrs {
-			as := strings.Split(attr, "=")
-			if len(as) != 2 {
-				continue
-			}
-			if as[0] == "len" {
-				return as[1], nil
-			}
+	attrs := strings.Split(fd.Tag, " ")
+	// Find length in attrs
+	for _, attr := range attrs {
+		as := strings.Split(attr, "=")
+		if len(as) != 2 {
+			continue
+		}
+		if as[0] == "len" {
+			return as[1], nil
 		}
 	}
 	return "", fmt.Errorf("error while finding length attribute for field %s", fd.Name)

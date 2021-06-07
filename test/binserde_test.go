@@ -13,6 +13,10 @@ func TestMarshal(t *testing.T) {
 		Age:       10,
 		Age2:      123456789,
 		Age3:      2,
+		Embedded: TestBin2{
+			Age:  28,
+			Name: []byte("Rick"),
+		},
 	}
 	b := m.Marshal()
 
