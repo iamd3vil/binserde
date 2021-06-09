@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/knadh/stuffbin"
@@ -101,7 +102,11 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 					return nil, fmt.Errorf("error while generating marshalling code: %s", f.Type)
 				}
 				fd.Append = true
-				fd.Offset = fmt.Sprintf("s.%s.Size()", f.Name)
+				len, err := getLength(f)
+				if err != nil {
+					return nil, err
+				}
+				fd.Offset = len
 				fd.FieldName = fmt.Sprintf("s.%s.Marshal()", f.Name)
 			}
 
@@ -197,6 +202,11 @@ func getLength(fd structField) (string, error) {
 			continue
 		}
 		if as[0] == "len" {
+			// Return if length is an integer,
+			// if not assume that this is a field name.
+			if _, err := strconv.ParseInt(as[1], 10, 64); err != nil {
+				return fmt.Sprintf("s.%s", as[1]), nil
+			}
 			return as[1], nil
 		}
 	}
