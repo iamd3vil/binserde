@@ -1,27 +1,38 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
-	"flag"
 	"fmt"
 	"go/format"
 	"go/parser"
 	"go/token"
 	"log"
 	"os"
+
+	"github.com/spf13/pflag"
 )
 
 var (
-	buildDate, buildVersion string
+	buildString string
 )
 
 func main() {
-	pkg := flag.String("pkg", "main", "Package to be given for the generated code")
-	dir := flag.String("dir", ".", `Path of the directory for finding source files with structs.`)
-	dest := flag.String("file", "", "Destination File")
-	endianess := flag.String("endianess", "big", "Endianess")
-	flag.Parse()
+	fg := pflag.NewFlagSet("binserde", pflag.ExitOnError)
+	fg.Usage = func() {
+		fmt.Println(fg.FlagUsages())
+		os.Exit(1)
+	}
+	pkg := fg.String("pkg", "main", "Package to be given for the generated code")
+	dir := fg.String("dir", ".", `Path of the directory for finding source files with structs.`)
+	dest := fg.String("file", "", "Destination File")
+	endianess := fg.String("endianess", "big", "Endianess")
+	version := fg.Bool("version", false, "Version")
+	fg.Parse(os.Args[1:])
+
+	if *version {
+		fmt.Println(buildString)
+		os.Exit(0)
+	}
 
 	fs, err := initFileSystem()
 	if err != nil {
@@ -59,9 +70,7 @@ func main() {
 		log.Fatalf("error while formatting code: %v", err)
 	}
 
-	wtr := bufio.NewWriter(f)
-	defer wtr.Flush()
-	if _, err := wtr.Write(fmted); err != nil {
+	if _, err := f.Write(fmted); err != nil {
 		log.Fatalf("error while storing the file: %v", err)
 	}
 }

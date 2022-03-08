@@ -1,24 +1,31 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 	"testing"
 )
 
-func TestMarshal(t *testing.T) {
+func TestMarshalUnmarshal(t *testing.T) {
 	m := TestBin{
-		Name:      "Rick",
-		NameBytes: []byte("Rick"),
-		Age:       10,
-		Age2:      123456789,
-		Age3:      2,
+		Name:         "Rick",
+		LenNameBytes: 4,
+		NameBytes:    []byte("Rick"),
+		Age:          10,
+		Age2:         123456789,
+		Age3:         2,
+		LenEmbedded:  12,
 		Embedded: TestBin2{
-			Age:  28,
-			Name: []byte("Rick"),
+			Age:     28,
+			LenName: int32(len([]byte("Rick"))),
+			Name:    []byte("Rick"),
 		},
 	}
-	b := m.Marshal()
+	b := bytes.NewBuffer([]byte{})
+	if err := m.Marshal(b); err != nil {
+		t.Fatal(err)
+	}
 
 	m2 := TestBin{}
 	m2.Unmarshal(b)
@@ -30,20 +37,34 @@ func TestMarshal(t *testing.T) {
 
 func BenchmarkMarshalUnmarshal(b *testing.B) {
 	m := TestBin{
-		Name:      "Rick",
-		NameBytes: []byte("Rick"),
-		Age:       10,
-		Age2:      123456789,
-		Age3:      2,
+		// Name:         "Rick",
+		// LenNameBytes: 4,
+		// NameBytes:    []byte("Rick"),
+		// Age:          10,
+		// Age2:         123456789,
+		// Age3:         2,
+		Name:         "Rick",
+		LenNameBytes: 4,
+		NameBytes:    []byte("Rick"),
+		Age:          10,
+		Age2:         123456789,
+		Age3:         2,
+		LenEmbedded:  12,
+		Embedded: TestBin2{
+			Age:     28,
+			LenName: int32(len([]byte("Rick"))),
+			Name:    []byte("Rick"),
+		},
 	}
 
-	bs := m.Marshal()
+	bs := bytes.NewBuffer([]byte{})
 
 	b.Run("BenchmarkMarshal", func(b *testing.B) {
 		b.ReportAllocs()
 		b.ResetTimer()
 		for i := 0; i <= b.N; i++ {
-			m.Marshal()
+			bs.Reset()
+			m.Marshal(bs)
 		}
 	})
 

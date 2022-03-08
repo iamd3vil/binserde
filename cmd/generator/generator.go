@@ -11,11 +11,12 @@ import (
 
 // genMarshalField is each field in genMarshalStruct.
 type genMarshalField struct {
-	Append    bool
-	Func      string
-	Offset    string
-	Length    int64
-	FieldName string
+	Append            bool
+	Func              string
+	Offset            string
+	Length            int64
+	FieldName         string
+	HasToBeMarshalled bool
 }
 
 // genMarshalStruct is the struct passed down to template for generating marshalling code.
@@ -77,7 +78,7 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 			switch f.Type {
 			case "[]byte", "string":
 				fd.Append = true
-				len, err := getLength(f)
+				len, err := getLength(f, "len")
 				if err != nil {
 					return nil, err
 				}
@@ -95,6 +96,18 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 				fd.Func = "PutUint16"
 				fd.Offset = "2"
 				fd.FieldName = fmt.Sprintf("uint16(s.%s)", f.Name)
+				// typ := f.Type
+
+				// // If it's a repeating structure, check number of times it would repeat.
+				// if strings.HasPrefix(f.Type, "[]") {
+				// 	// Get the number of times this is repeated.
+				// 	r, err := getLength(f, "len")
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+
+				// 	// Loop over and add fields.
+				// }
 			default:
 				// Check if the type is a struct in the package.
 				_, ok := sts[f.Type]
@@ -102,12 +115,14 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 					return nil, fmt.Errorf("error while generating marshalling code: %s", f.Type)
 				}
 				fd.Append = true
-				len, err := getLength(f)
+				len, err := getLength(f, "len")
 				if err != nil {
 					return nil, err
 				}
 				fd.Offset = len
-				fd.FieldName = fmt.Sprintf("s.%s.Marshal()", f.Name)
+				fd.FieldName = fmt.Sprintf("s.%s", f.Name)
+				// Since this field is an embedded struct, it has to be marshalled.
+				fd.HasToBeMarshalled = true
 			}
 
 			fds = append(fds, fd)
@@ -136,13 +151,13 @@ func makeUnmarshallingStructs(sts map[string][]structField) ([]genUnmarshalStruc
 			switch f.Type {
 			case "[]byte":
 				fd.Append = true
-				len, err := getLength(f)
+				len, err := getLength(f, "len")
 				if err != nil {
 					return nil, err
 				}
 				fd.Offset = len
 			case "string":
-				len, err := getLength(f)
+				len, err := getLength(f, "len")
 				if err != nil {
 					return nil, err
 				}
@@ -165,7 +180,7 @@ func makeUnmarshallingStructs(sts map[string][]structField) ([]genUnmarshalStruc
 				}
 
 				fd.Struct = true
-				len, err := getLength(f)
+				len, err := getLength(f, "len")
 				if err != nil {
 					return nil, err
 				}
@@ -181,10 +196,26 @@ func makeUnmarshallingStructs(sts map[string][]structField) ([]genUnmarshalStruc
 	return gensts, nil
 }
 
+// func marshalStruct(typ string, sts map[string][]structField, f structField) (genMarshalField, error) {
+// 	fd := genMarshalField{}
+
+// 	// Check if the type is a struct in the package.
+// 	_, ok := sts[typ]
+// 	if !ok {
+// 		return genMarshalField{}, fmt.Errorf("error while generating marshalling code: %s", typ)
+// 	}
+// 	fd.Append = true
+// 	len, err := getLength(f, "len")
+// 	if err != nil {
+// 		return genMarshalField{}, err
+// 	}
+// 	fd.Offset = len
+// 	fd.FieldName = fmt.Sprintf("s.%s.Marshal()", f.Name)
+// }
+
 func addInitialContext(tmplContext map[string]interface{}, pkg, endianess string) {
 	tmplContext["Pkg"] = pkg
-	tmplContext["BuildDate"] = buildDate
-	tmplContext["BuildVersion"] = buildVersion
+	tmplContext["BuildString"] = buildString
 
 	if endianess == "big" {
 		tmplContext["Endian"] = "BigEndian"
@@ -193,7 +224,7 @@ func addInitialContext(tmplContext map[string]interface{}, pkg, endianess string
 	}
 }
 
-func getLength(fd structField) (string, error) {
+func getLength(fd structField, tag string) (string, error) {
 	attrs := strings.Split(fd.Tag, " ")
 	// Find length in attrs
 	for _, attr := range attrs {
@@ -201,11 +232,11 @@ func getLength(fd structField) (string, error) {
 		if len(as) != 2 {
 			continue
 		}
-		if as[0] == "len" {
+		if as[0] == tag {
 			// Return if length is an integer,
 			// if not assume that this is a field name.
 			if _, err := strconv.ParseInt(as[1], 10, 64); err != nil {
-				return fmt.Sprintf("s.%s", as[1]), nil
+				return fmt.Sprintf("int(s.%s)", as[1]), nil
 			}
 			return as[1], nil
 		}
