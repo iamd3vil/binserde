@@ -22,17 +22,33 @@ func TestMarshalUnmarshal(t *testing.T) {
 			Name:    []byte("Rick"),
 		},
 	}
-	b := bytes.NewBuffer([]byte{})
-	if err := m.Marshal(b); err != nil {
-		t.Fatal(err)
-	}
+	t.Run("io-reader-writer", func(t *testing.T) {
+		b := bytes.NewBuffer([]byte{})
+		if err := m.Marshal(b); err != nil {
+			t.Fatal(err)
+		}
 
-	m2 := TestBin{}
-	m2.Unmarshal(b)
+		m2 := TestBin{}
+		m2.Unmarshal(b)
 
-	if !reflect.DeepEqual(m, m2) {
-		t.Fatalf("Expected: %#+v, got: %#+v", m, m2)
-	}
+		if !reflect.DeepEqual(m, m2) {
+			t.Fatalf("Expected: %#+v, got: %#+v", m, m2)
+		}
+	})
+
+	t.Run("bytes", func(t *testing.T) {
+		b, err := m.MarshalToBytes()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		m2 := TestBin{}
+		m2.UnmarshalFromBytes(b)
+
+		if !reflect.DeepEqual(m, m2) {
+			t.Fatalf("Expected: %#+v, got: %#+v", m, m2)
+		}
+	})
 }
 
 func BenchmarkMarshalUnmarshal(b *testing.B) {

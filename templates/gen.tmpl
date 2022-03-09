@@ -4,6 +4,7 @@ package {{.Pkg}}
 import (
     "encoding/binary"
     "io"
+    "bytes"
 )
 
 {{- range .MarshalStructs}}
@@ -36,6 +37,14 @@ func (s *{{.StructName}}) Marshal(wr io.Writer) error {
         {{- end}}
     {{- end}}
     return nil
+}
+
+func (s *{{.StructName}}) MarshalToBytes() ([]byte, error) {
+    buf := bytes.NewBuffer(make([]byte, 0, s.Size()))
+    if err := s.Marshal(buf); err != nil {
+        return nil, err
+    }
+    return buf.Bytes(), nil
 }
 
 func (s *{{.StructName}}) Size() int {
@@ -77,5 +86,10 @@ func (s *{{.StructName}}) Unmarshal(rdr io.Reader) error {
         
     {{- end}}
     return nil
+}
+
+func (s *{{.StructName}}) UnmarshalFromBytes(data []byte) error {
+    buf := bytes.NewBuffer(data)
+    return s.Unmarshal(buf)
 }
 {{- end}}
