@@ -8,6 +8,7 @@ type TestBin struct {
 	Age         int32
 	Age2        int64
 	Age3        int16
+	Wealth      float64
 	LenEmbedded int32
 	Embedded    TestBin2 `bin:"len=LenEmbedded"`
 }

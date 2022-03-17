@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"go/format"
 	"go/parser"
 	"go/token"
 	"log"
 	"os"
 
 	"github.com/spf13/pflag"
+	"golang.org/x/tools/imports"
 )
 
 var (
@@ -65,7 +65,7 @@ func main() {
 	}
 	defer f.Close()
 
-	fmted, err := format.Source(code.Bytes())
+	fmted, err := imports.Process(fPath, code.Bytes(), nil)
 	if err != nil {
 		log.Fatalf("error while formatting code: %v", err)
 	}

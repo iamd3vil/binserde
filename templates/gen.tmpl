@@ -5,6 +5,7 @@ import (
     "encoding/binary"
     "io"
     "bytes"
+    "math"
 )
 
 {{- range .MarshalStructs}}
@@ -67,6 +68,11 @@ func (s *{{.StructName}}) Unmarshal(rdr io.Reader) error {
             if _, err := io.ReadFull(rdr, s.{{.FieldName}}); err != nil {
                 return err
             }
+        {{- else if .Float64}}
+            if _, err := io.ReadFull(rdr, buf[:{{.Offset}}]); err != nil {
+                return err
+            }
+            s.{{.FieldName}} = math.Float64frombits(binary.{{$.Endian}}.{{.Func}}(buf[:{{.Offset}}]))
         {{- else if .String}}
             buf{{.FieldName}} := make([]byte, {{.Offset}})
             if _, err := io.ReadFull(rdr, buf{{.FieldName}}); err != nil {

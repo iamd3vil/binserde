@@ -15,12 +15,9 @@ func TestMarshalUnmarshal(t *testing.T) {
 		Age:          10,
 		Age2:         123456789,
 		Age3:         2,
+		Wealth:       450.3,
 		LenEmbedded:  12,
-		Embedded: TestBin2{
-			Age:     28,
-			LenName: int32(len([]byte("Rick"))),
-			Name:    []byte("Rick"),
-		},
+		Embedded:     TestBin2{Age: 28, LenName: int32(len([]byte("Rick"))), Name: []byte("Rick")},
 	}
 	t.Run("io-reader-writer", func(t *testing.T) {
 		b := bytes.NewBuffer([]byte{})

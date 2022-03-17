@@ -30,6 +30,7 @@ type genUnmarshalField struct {
 	Append    bool
 	String    bool
 	Struct    bool
+	Float64   bool
 	Func      string
 	Offset    string
 	Length    int64
@@ -108,6 +109,10 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 
 				// 	// Loop over and add fields.
 				// }
+			case "float64":
+				fd.Offset = "8"
+				fd.FieldName = fmt.Sprintf("math.Float64bits(s.%s)", f.Name)
+				fd.Func = "PutUint64"
 			default:
 				// Check if the type is a struct in the package.
 				_, ok := sts[f.Type]
@@ -172,11 +177,15 @@ func makeUnmarshallingStructs(sts map[string][]structField) ([]genUnmarshalStruc
 			case "int16", "uint16":
 				fd.Func = "Uint16"
 				fd.Offset = "2"
+			case "float64":
+				fd.Float64 = true
+				fd.Func = "Uint64"
+				fd.Offset = "8"
 			default:
 				// Check if the type is a struct in the package.
 				_, ok := sts[f.Type]
 				if !ok {
-					return nil, fmt.Errorf("error while generating marshalling code: %s", f.Type)
+					return nil, fmt.Errorf("error while generating unmarshalling code: %s", f.Type)
 				}
 
 				fd.Struct = true
