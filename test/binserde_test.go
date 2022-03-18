@@ -11,7 +11,6 @@ func TestMarshalUnmarshal(t *testing.T) {
 	m := TestBin{
 		Name:         "Rick",
 		LenNameBytes: 4,
-		NameBytes:    []byte("Rick"),
 		Age:          10,
 		Age2:         123456789,
 		Age3:         2,
@@ -19,6 +18,9 @@ func TestMarshalUnmarshal(t *testing.T) {
 		LenEmbedded:  12,
 		Embedded:     TestBin2{Age: 28, LenName: int32(len([]byte("Rick"))), Name: []byte("Rick")},
 	}
+	// Testing if the length is correct.
+	m.NameBytes = make([]byte, m.LenNameBytes)
+	copy(m.NameBytes, []byte("Ric"))
 	t.Run("io-reader-writer", func(t *testing.T) {
 		b := bytes.NewBuffer([]byte{})
 		if err := m.Marshal(b); err != nil {

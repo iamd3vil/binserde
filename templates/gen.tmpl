@@ -24,7 +24,7 @@ func (s *{{.StructName}}) Marshal(wr io.Writer) error {
             }
         {{- else}}
             {{- if not .HasToBeMarshalled }}
-                byBuf = make([]byte, len({{.FieldName}}))
+                byBuf = make([]byte, {{.Offset}})
                 copy(byBuf, {{.FieldName}})
                 _, err = wr.Write(byBuf)
                 if err != nil {
