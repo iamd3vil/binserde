@@ -114,19 +114,9 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 				fd.FieldName = fmt.Sprintf("math.Float64bits(s.%s)", f.Name)
 				fd.Func = "PutUint64"
 			default:
-				// Check if the type is a struct in the package.
-				_, ok := sts[f.Type]
-				if !ok {
-					return nil, fmt.Errorf("error while generating marshalling code: %s", f.Type)
-				}
 				fd.Append = true
-				len, err := getLength(f, "len")
-				if err != nil {
-					return nil, err
-				}
-				fd.Offset = len
 				fd.FieldName = fmt.Sprintf("s.%s", f.Name)
-				// Since this field is an embedded struct, it has to be marshalled.
+				// Since this field is an embedded struct/custom type, it has to be marshalled.
 				fd.HasToBeMarshalled = true
 			}
 
@@ -182,18 +172,8 @@ func makeUnmarshallingStructs(sts map[string][]structField) ([]genUnmarshalStruc
 				fd.Func = "Uint64"
 				fd.Offset = "8"
 			default:
-				// Check if the type is a struct in the package.
-				_, ok := sts[f.Type]
-				if !ok {
-					return nil, fmt.Errorf("error while generating unmarshalling code: %s", f.Type)
-				}
-
+				// This might be a struct or a custom type.
 				fd.Struct = true
-				len, err := getLength(f, "len")
-				if err != nil {
-					return nil, err
-				}
-				fd.Offset = len
 			}
 
 			fds = append(fds, fd)

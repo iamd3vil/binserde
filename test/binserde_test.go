@@ -16,7 +16,12 @@ func TestMarshalUnmarshal(t *testing.T) {
 		Age3:         2,
 		Wealth:       450.3,
 		LenEmbedded:  12,
-		Embedded:     TestBin2{Age: 28, LenName: int32(len([]byte("Rick"))), Name: []byte("Rick")},
+		Embedded: TestBin2{
+			LenName:  5,
+			Name:     []byte("Sarat"),
+			Age:      29,
+			Metadata: CustomString("hello"),
+		},
 	}
 	// Testing if the length is correct.
 	m.NameBytes = make([]byte, m.LenNameBytes)
@@ -52,23 +57,18 @@ func TestMarshalUnmarshal(t *testing.T) {
 
 func BenchmarkMarshalUnmarshal(b *testing.B) {
 	m := TestBin{
-		// Name:         "Rick",
-		// LenNameBytes: 4,
-		// NameBytes:    []byte("Rick"),
-		// Age:          10,
-		// Age2:         123456789,
-		// Age3:         2,
 		Name:         "Rick",
 		LenNameBytes: 4,
-		NameBytes:    []byte("Rick"),
 		Age:          10,
 		Age2:         123456789,
 		Age3:         2,
+		Wealth:       450.3,
 		LenEmbedded:  12,
 		Embedded: TestBin2{
-			Age:     28,
-			LenName: int32(len([]byte("Rick"))),
-			Name:    []byte("Rick"),
+			LenName:  5,
+			Name:     []byte("Sarat"),
+			Age:      29,
+			Metadata: CustomString("hello"),
 		},
 	}
 

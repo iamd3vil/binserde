@@ -1,5 +1,31 @@
 package main
 
+import "io"
+
+type CustomString string
+
+func (c *CustomString) Marshal(wr io.Writer) error {
+	if _, err := io.WriteString(wr, string(*c)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CustomString) Unmarshal(rdr io.Reader) error {
+	b := make([]byte, c.Size())
+	if _, err := io.ReadFull(rdr, b); err != nil {
+		return err
+	}
+
+	*c = CustomString(string(b))
+
+	return nil
+}
+
+func (c *CustomString) Size() int {
+	return 5
+}
+
 type TestBin struct {
 	Name         string `bin:"len=4"`
 	LenNameBytes int32
@@ -10,29 +36,14 @@ type TestBin struct {
 	Age3        int16
 	Wealth      float64
 	LenEmbedded int32
-	Embedded    TestBin2 `bin:"len=LenEmbedded"`
+	Embedded    TestBin2
 }
 
 type TestBin2 struct {
 	LenName int32
 	Name    []byte `bin:"len=LenName"`
 	Age     int32
-}
 
-type BCastHeader struct {
-	Reserved1  string `bin:"len=4"`
-	LogTime    int32
-	AlphaChar  string `bin:"len=2"`
-	TransCode  int16
-	ErrorCode  int16
-	BCSeqNo    int32
-	Reserved2  string `bin:"len=4"`
-	Timestamp2 string `bin:"len=8"`
-	Filler2    string `bin:"len=8"`
-}
-
-type BCastPacket struct {
-	Header        BCastHeader `bin:"len=38"`
-	MessageLength int16
-	Packet        []byte `bin:"len=MessageLength"`
+	// Add custom type.
+	Metadata CustomString
 }

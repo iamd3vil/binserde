@@ -51,7 +51,15 @@ func (s *{{.StructName}}) MarshalToBytes() ([]byte, error) {
 func (s *{{.StructName}}) Size() int {
     ln := 0
     {{- range .Fields}}
-        ln += {{.Offset}}
+        {{- if not .Append}}
+            ln += {{.Offset}}
+        {{- else}}
+            {{- if not .HasToBeMarshalled }}
+                ln += {{.Offset}}
+            {{- else }}
+                ln += {{.FieldName}}.Size()
+            {{- end}}
+        {{- end}}
     {{- end}}
     return ln
 }

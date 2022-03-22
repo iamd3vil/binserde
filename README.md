@@ -13,4 +13,4 @@ So `binserde` generates efficient code for serializing & deserializing data for 
 - [ ] Marshal, unmarshal code.
     - [x] Basic Types(int, float, string, []byte).
     - [x] Embedded structs.
-    - [ ] Custom types.
+    - [X] Custom types.

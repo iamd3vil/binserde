@@ -23,6 +23,11 @@ test: build
 	./binserde.bin --dir test --file test/binserde_gen.go
 	go test -v ./test
 
+bench: build
+	rm -rf ./test/binserde_gen.go
+	./binserde.bin --dir test --file test/binserde_gen.go
+	go test -v -bench=BenchmarkMarshalUnmarshal ./test
+
 clean:
 	go clean
 	rm -f ${BIN}
