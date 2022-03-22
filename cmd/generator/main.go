@@ -59,16 +59,16 @@ func main() {
 		fPath = fmt.Sprintf("%s_binserde_gen.go", *pkg)
 	}
 
+	fmted, err := imports.Process(fPath, code.Bytes(), nil)
+	if err != nil {
+		log.Fatalf("error while formatting code: %v", err)
+	}
+
 	f, err := os.Create(fPath)
 	if err != nil {
 		log.Printf("error while creating file: %v\n", err)
 	}
 	defer f.Close()
-
-	fmted, err := imports.Process(fPath, code.Bytes(), nil)
-	if err != nil {
-		log.Fatalf("error while formatting code: %v", err)
-	}
 
 	if _, err := f.Write(fmted); err != nil {
 		log.Fatalf("error while storing the file: %v", err)
