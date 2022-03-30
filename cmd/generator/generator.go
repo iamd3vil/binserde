@@ -28,7 +28,7 @@ type genMarshalStruct struct {
 // HasFieldToBeMarshalled returns true when any of the fields has HasToBeMarshalled as true.
 func (g *genMarshalStruct) HasFieldToBeMarshalled() bool {
 	for _, f := range g.Fields {
-		if f.HasToBeMarshalled {
+		if f.HasToBeMarshalled || f.Append {
 			return true
 		}
 	}
