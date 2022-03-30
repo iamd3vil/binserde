@@ -12,7 +12,9 @@ import (
 func (s *{{.StructName}}) Marshal(wr io.Writer) error {
     buf := make([]byte, 8)
     var (
+        {{- if .HasFieldToBeMarshalled }}
         byBuf []byte
+        {{- end }}
         err error
     )
     {{- range .Fields}}

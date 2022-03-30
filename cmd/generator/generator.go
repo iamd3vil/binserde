@@ -25,6 +25,16 @@ type genMarshalStruct struct {
 	Fields     []genMarshalField
 }
 
+// HasFieldToBeMarshalled returns true when any of the fields has HasToBeMarshalled as true.
+func (g *genMarshalStruct) HasFieldToBeMarshalled() bool {
+	for _, f := range g.Fields {
+		if f.HasToBeMarshalled {
+			return true
+		}
+	}
+	return false
+}
+
 // genUnmarshalField is each field in genMarshalStruct.
 type genUnmarshalField struct {
 	Append    bool

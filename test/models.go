@@ -47,3 +47,8 @@ type TestBin2 struct {
 	// Add custom type.
 	Metadata CustomString
 }
+
+type TestStructWithoutStringOrBytes struct {
+	Qty   int32
+	Price int32
+}
