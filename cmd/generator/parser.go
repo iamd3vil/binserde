@@ -44,7 +44,7 @@ func parseNode(node ast.Node) (map[string][]structField, error) {
 func parseStructSpec(structName string, s *ast.StructType) ([]structField, error) {
 	stFields := []structField{}
 	for _, f := range s.Fields.List {
-		// Get `bin` tag. If it doesn't have that fields, ignore that field
+		// Get `bin` tag if it exists.
 		var (
 			tag string
 			ok  bool
@@ -54,6 +54,10 @@ func parseStructSpec(structName string, s *ast.StructType) ([]structField, error
 			if !ok {
 				tag = ""
 			}
+		}
+		// If the tag is `skip`, we will skip adding this field.
+		if tag == "skip" {
+			continue
 		}
 		var fieldType string
 		switch f.Type.(type) {
