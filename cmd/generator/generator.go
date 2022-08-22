@@ -21,8 +21,9 @@ type genMarshalField struct {
 
 // genMarshalStruct is the struct passed down to template for generating marshalling code.
 type genMarshalStruct struct {
-	StructName string
-	Fields     []genMarshalField
+	StructName  string
+	Fields      []genMarshalField
+	NeedsBuffer bool
 }
 
 // HasFieldToBeMarshalled returns true when any of the fields has HasToBeMarshalled as true.
@@ -50,8 +51,9 @@ type genUnmarshalField struct {
 
 // genMarshalStruct is the struct passed down to template for generating marshalling code.
 type genUnmarshalStruct struct {
-	StructName string
-	Fields     []genUnmarshalField
+	StructName  string
+	NeedsBuffer bool
+	Fields      []genUnmarshalField
 }
 
 func generateCode(dest io.Writer, fs stuffbin.FileSystem, pkg string, structs map[string][]structField, endianess string) error {
@@ -99,30 +101,22 @@ func makeMarshallingStructs(sts map[string][]structField) ([]genMarshalStruct, e
 				fd.Func = "PutUint32"
 				fd.Offset = "4"
 				fd.FieldName = fmt.Sprintf("uint32(s.%s)", f.Name)
+				st.NeedsBuffer = true
 			case "int64", "uint64":
 				fd.Func = "PutUint64"
 				fd.Offset = "8"
 				fd.FieldName = fmt.Sprintf("uint64(s.%s)", f.Name)
+				st.NeedsBuffer = true
 			case "int16", "uint16":
 				fd.Func = "PutUint16"
 				fd.Offset = "2"
 				fd.FieldName = fmt.Sprintf("uint16(s.%s)", f.Name)
-				// typ := f.Type
-
-				// // If it's a repeating structure, check number of times it would repeat.
-				// if strings.HasPrefix(f.Type, "[]") {
-				// 	// Get the number of times this is repeated.
-				// 	r, err := getLength(f, "len")
-				// 	if err != nil {
-				// 		return nil, err
-				// 	}
-
-				// 	// Loop over and add fields.
-				// }
+				st.NeedsBuffer = true
 			case "float64":
 				fd.Offset = "8"
 				fd.FieldName = fmt.Sprintf("math.Float64bits(s.%s)", f.Name)
 				fd.Func = "PutUint64"
+				st.NeedsBuffer = true
 			default:
 				fd.Append = true
 				fd.FieldName = fmt.Sprintf("s.%s", f.Name)
@@ -171,16 +165,20 @@ func makeUnmarshallingStructs(sts map[string][]structField) ([]genUnmarshalStruc
 			case "int32", "uint32":
 				fd.Func = "Uint32"
 				fd.Offset = "4"
+				st.NeedsBuffer = true
 			case "int64", "uint64":
 				fd.Func = "Uint64"
 				fd.Offset = "8"
+				st.NeedsBuffer = true
 			case "int16", "uint16":
 				fd.Func = "Uint16"
 				fd.Offset = "2"
+				st.NeedsBuffer = true
 			case "float64":
 				fd.Float64 = true
 				fd.Func = "Uint64"
 				fd.Offset = "8"
+				st.NeedsBuffer = true
 			default:
 				// This might be a struct or a custom type.
 				fd.Struct = true

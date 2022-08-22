@@ -10,7 +10,9 @@ import (
 
 {{- range .MarshalStructs}}
 func (s *{{.StructName}}) Marshal(wr io.Writer) error {
+    {{- if .NeedsBuffer }}
     buf := make([]byte, 8)
+    {{- end }}
     var (
         {{- if .HasFieldToBeMarshalled }}
         byBuf []byte
@@ -71,7 +73,9 @@ func (s *{{.StructName}}) Size() int {
 
 {{- range .UnmarshalStructs}}
 func (s *{{.StructName}}) Unmarshal(rdr io.Reader) error {
+    {{- if .NeedsBuffer }}
     buf := make([]byte, 8)
+    {{- end }}
     {{- range .Fields}}
         {{- if .Append}}
             s.{{.FieldName}} = make([]byte, {{.Offset}})
